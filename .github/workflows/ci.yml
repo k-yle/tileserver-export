@@ -1,0 +1,61 @@
+name: build
+
+on: [push]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x]
+
+    steps:
+      - name: 🛎️ Checkout
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: 🔢 Use Node.js ${{ matrix.node-version }} 🏎
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: 📶 Install
+        run: |
+          yarn
+        env:
+          CI: true
+
+      - name: 💚 Lint
+        run: |
+          yarn lint
+        env:
+          CI: true
+
+      - name: 💖 Format
+        run: |
+          yarn prettier
+        env:
+          CI: true
+
+      - name: 💙 Typecheck
+        continue-on-error: true
+        run: |
+          yarn typecheck
+        env:
+          CI: true
+
+      - name: 🏗️ Build
+        run: |
+          yarn build
+        env:
+          CI: true
+
+      - name: ⚛ Deploy Client
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: JamesIves/github-pages-deploy-action@releases/v3
+        with:
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: public

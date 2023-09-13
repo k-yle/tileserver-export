@@ -1,5 +1,6 @@
 import type { LatLngBounds } from "leaflet";
 import type { BBox } from "which-polygon";
+import type { Coord } from "../types";
 
 const { log, cos, tan, floor, ceil, PI: π } = Math;
 
@@ -7,6 +8,11 @@ export const toBBox = (bounds: LatLngBounds): BBox =>
   bounds.toBBoxString().split(",").map(Number) as BBox;
 
 const degToRad = (deg: number) => deg * (π / 180);
+
+export const getCentroid = (bbox: BBox): Coord => {
+  const [minLng, minLat, maxLng, maxLat] = bbox;
+  return [minLat + (maxLat - minLat) / 2, minLng + (maxLng - minLng) / 2];
+};
 
 export function latLngToXYZ(
   lat: number,

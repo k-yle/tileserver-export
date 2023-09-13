@@ -7,7 +7,10 @@ const isValid = (x: ELI) =>
   !x.url.includes("{apikey}");
 
 /** if true, we only return worldwide layers */
-type ELIQuery = (bbox: BBox | true) => ELI[];
+type ELIQuery = {
+  (bbox: BBox | true): ELI[];
+  raw: GeoJson<ELI>;
+};
 
 async function getELIQuerier(): Promise<ELIQuery> {
   const geojson: GeoJson<ELI> = await fetch(
@@ -27,12 +30,14 @@ async function getELIQuerier(): Promise<ELIQuery> {
   const query = whichPolygon<ELI>(nonWorld);
 
   // the returned function is called on every query
-  return (bbox) => {
+  const wrappedQuery: ELIQuery = (bbox) => {
     if (bbox === true) return world;
 
     const local = query.bbox(bbox);
     return [...local.filter(isValid), ...world];
   };
+  wrappedQuery.raw = geojson;
+  return wrappedQuery;
 }
 
 /**

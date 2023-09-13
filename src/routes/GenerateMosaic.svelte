@@ -12,9 +12,12 @@
   import {
     CONCURRENT,
     convertTileUrl,
+    getCentroid,
     populateTileUrl,
     TileDimesion,
   } from "../helpers";
+  import { HistoryItem, recentExports, ShortLink } from "../store";
+  import { geocode } from "../api";
 
   const dispatch = createEventDispatcher<{ back: never }>();
 
@@ -39,7 +42,31 @@
     });
   }
 
+  async function storeInHistory() {
+    // update the URL hash to include all the options
+    const { zoom, minX, maxX, minY, maxY } = tileConfig;
+    const layerIds = layerConfig.layers.map((layer) => layer.id).join(",");
+    const newHash: ShortLink = `#/${zoom}/${minX}+${maxX - minX}/${minY}+${
+      maxY - minY
+    }/${layerIds}`;
+
+    window.history.replaceState(
+      "",
+      "",
+      window.location.href.split("#")[0] + newHash
+    );
+
+    // store the most recent exports
+    const newItem: HistoryItem = {
+      code: newHash,
+      near: await geocode(getCentroid(layerConfig.bbox)),
+    };
+    recentExports.update((existing) => [...existing, newItem]);
+  }
+
   onMount(async () => {
+    storeInHistory(); // no await, this can happen in parallel
+
     const ctx = canvas.getContext("2d")!;
 
     canvas.width = tileConfig.xCount * 256;
@@ -110,11 +137,22 @@
   onDestroy(controller.abort);
 
   const attributionRequired = layerConfig.layers.some(
-    (l) => l.attribution.required
+    (l) => l.attribution?.required
   );
   const attributions = layerConfig.layers
-    .filter((l) => l.attribution.text)
+    .filter((l) => l.attribution?.text)
     .map((l) => l.attribution);
+
+  async function onClickShare() {
+    const layerNames = layerConfig.layers
+      .map((layer) => layer.name)
+      .join(" + ");
+
+    await navigator.share({
+      title: `Export of ${layerNames}`,
+      url: window.location.href,
+    });
+  }
 </script>
 
 <main>
@@ -124,13 +162,13 @@
       You {#if attributionRequired}<strong>must</strong>{:else}should{/if} display
       the following attribution alongside your map:
       <aside>
-        {#each attributions as attribution (attribution.text)}
-          {#if attribution.url}
+        {#each attributions as attribution (attribution?.text)}
+          {#if attribution?.url}
             <a href={attribution.url} target="_blank" rel="noopener noreferrer"
               >{attribution.text}</a
             >
           {:else}
-            {attribution.text}
+            {attribution?.text}
           {/if}
           <br />
         {/each}
@@ -145,6 +183,7 @@
         <Button variant="raised" href={final.blobUrl} download="map.png"
           >Download</Button
         >
+        <Button variant="raised" on:click={onClickShare}>Share Link</Button>
         {#if final.failed}
           <br />
           <br />

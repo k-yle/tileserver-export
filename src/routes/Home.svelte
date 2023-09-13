@@ -2,6 +2,7 @@
   import { createEventDispatcher } from "svelte";
   import Paper, { Content as PaperContent } from "@smui/paper";
   import Button from "@smui/button";
+  import RecentExports from "../components/RecentExports.svelte";
 
   const dispatch = createEventDispatcher<{ start: never }>();
 </script>
@@ -16,6 +17,8 @@
       <Button variant="raised" on:click={() => dispatch("start")}>Start</Button>
     </PaperContent>
   </Paper>
+
+  <RecentExports />
 </main>
 
 <style>

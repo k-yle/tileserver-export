@@ -1,3 +1,5 @@
+import type { ELI } from "./eli";
+
 export type BBox = [
   minLng: number,
   minLat: number,

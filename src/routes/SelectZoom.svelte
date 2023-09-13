@@ -5,6 +5,7 @@
   import { OverzoomIcon, TooManyTilesIcon } from "../components";
   import {
     convertTileUrl,
+    getCentroid,
     getTileDimensions,
     IS_SUPERUSER,
     latLngToXYZ,
@@ -35,14 +36,9 @@
     }))
     .filter((x): x is ZoomLevel => !!x.zoom);
 
-  const [minLng, minLat, maxLng, maxLat] = areaAndLayers.bbox;
-
   function getDemoTiles(z: number) {
-    const [x, y] = latLngToXYZ(
-      minLat + (maxLat - minLat) / 2,
-      minLng + (maxLng - minLng) / 2,
-      z
-    );
+    const centre = getCentroid(areaAndLayers.bbox);
+    const [x, y] = latLngToXYZ(...centre, z);
 
     const urls = areaAndLayers.layers
       .map((layer) => populateTileUrl(convertTileUrl(layer.url), x, y, z))

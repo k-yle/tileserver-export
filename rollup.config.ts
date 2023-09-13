@@ -24,7 +24,7 @@ function serve() {
   return {
     writeBundle() {
       if (server) return;
-      server = spawn("npm", ["run", "start", "--", "--dev"], {
+      server = spawn("npm", ["run", "serve", "--", "--dev"], {
         stdio: ["ignore", "inherit", "inherit"],
         shell: true,
       });
@@ -77,7 +77,7 @@ export default {
       inlineSources: !production,
     }),
 
-    // In dev mode, call `npm run start` once
+    // In dev mode, call `npm run serve` once
     // the bundle has been generated
     !production && serve(),
 

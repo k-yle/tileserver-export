@@ -6,7 +6,7 @@
   "scripts": {
     "build": "rollup -c rollup.config.ts --configPlugin typescript",
     "dev": "rollup -w -c rollup.config.ts --configPlugin typescript",
-    "start": "sirv public --no-clear",
+    "serve": "sirv public --no-clear",
     "typecheck": "svelte-check --tsconfig ./tsconfig.json",
     "lint": "eslint --ext .ts,.js,.svelte --ignore-path .gitignore .",
     "prettier": "prettier --write \"./**/*.{js,ts,svelte,json,md}\" --ignore-path ./.gitignore"

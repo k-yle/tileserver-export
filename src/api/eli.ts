@@ -44,3 +44,13 @@ async function getELIQuerier(): Promise<ELIQuery> {
  * A cached querier function to get local imagery from ELI
  */
 export const eliQueryPromise = getELIQuerier().catch(console.error);
+
+export const allImageryPromise = eliQueryPromise.then((eliQuery) => {
+  const features = eliQuery?.raw.features || [];
+  // convert to object for faster lookups
+  return features.reduce<Record<string, ELI>>((ac, item) => {
+    // eslint-disable-next-line no-param-reassign
+    ac[item.properties.id] = item.properties;
+    return ac;
+  }, {});
+});

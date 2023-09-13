@@ -2,12 +2,13 @@ import type { LatLngBounds } from "leaflet";
 import type { BBox } from "which-polygon";
 import type { Coord } from "../types";
 
-const { log, cos, tan, floor, ceil, PI: π } = Math;
+const { log, cos, tan, floor, ceil, PI: π, atan, exp } = Math;
 
 export const toBBox = (bounds: LatLngBounds): BBox =>
   bounds.toBBoxString().split(",").map(Number) as BBox;
 
 const degToRad = (deg: number) => deg * (π / 180);
+const radToDeg = (rad: number) => rad * (180 / π);
 
 export const getCentroid = (bbox: BBox): Coord => {
   const [minLng, minLat, maxLng, maxLat] = bbox;
@@ -24,6 +25,13 @@ export function latLngToXYZ(
     ((1 - log(tan(degToRad(lat)) + 1 / cos(degToRad(lat))) / π) / 2) * 2 ** z
   );
   return [x, y, z];
+}
+
+export function XYZToLatLng(x: number, y: number, z: number): Coord {
+  const n = π - (2 * π * y) / 2 ** z;
+  const lat = radToDeg(atan(0.5 * (exp(n) - exp(-n))));
+  const lng = (x / 2 ** z) * 360 - 180;
+  return [lat, lng];
 }
 
 // based on https://github.com/andrewharvey/osm-editor-layer-index-qgis/blob/63366ac/index.js#L64-L68
@@ -79,13 +87,32 @@ export type TileDimesion = {
   tiles: number;
 };
 
+export function getDerivedTileDimensions(
+  partial: Pick<TileDimesion, "zoom" | "minX" | "maxX" | "minY" | "maxY">
+): TileDimesion | null {
+  const { minX, maxX, minY, maxY } = partial;
+  const tilePx = 256;
+
+  const [xCount, yCount] = [maxX - minX, maxY - minY];
+
+  // this zoom level is too way too small, the bbox is completely within one tile.
+  if (xCount < 1 || yCount < 1 || (xCount === 1 && yCount === 1)) return null;
+
+  return {
+    ...partial,
+    xCount,
+    yCount,
+    width: ceil(xCount * tilePx),
+    height: ceil(yCount * tilePx),
+    tiles: xCount * yCount,
+  };
+}
+
 export function getTileDimensions(
   zoom: number,
   bbox: BBox
 ): TileDimesion | null {
   const [minLng, minLat, maxLng, maxLat] = bbox;
-
-  const tilePx = 256;
 
   const [x1, y1] = latLngToXYZ(minLat, minLng, zoom);
   const [x2, y2] = latLngToXYZ(maxLat, maxLng, zoom);
@@ -95,21 +122,11 @@ export function getTileDimensions(
   const maxX = x1 > x2 ? x1 : x2;
   const maxY = y1 > y2 ? y1 : y2;
 
-  const [xCount, yCount] = [maxX - minX, maxY - minY];
-
-  // this zoom level is too way too small, the bbox is completely within one tile.
-  if (xCount < 1 || yCount < 1 || (xCount === 1 && yCount === 1)) return null;
-
-  return {
+  return getDerivedTileDimensions({
     zoom,
     minX,
     maxX,
     minY,
     maxY,
-    xCount,
-    yCount,
-    width: ceil(xCount * tilePx),
-    height: ceil(yCount * tilePx),
-    tiles: xCount * yCount,
-  };
+  });
 }

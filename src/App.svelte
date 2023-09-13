@@ -11,10 +11,12 @@
     SelectZoom,
     GenerateMosaic,
   } from "./routes";
+  import ReExportDialog from "./components/ReExportDialog.svelte";
 
   let areaAndLayers: MapSelection | null = null;
   let selectedZoom: TileDimesion | null = null;
-  let hasStarted = !!window.location.hash;
+  let hasStarted =
+    !!window.location.hash && !window.location.hash.startsWith("#/");
 
   function onClickHome() {
     selectedZoom = null;
@@ -23,6 +25,7 @@
   }
 </script>
 
+<ReExportDialog bind:hasStarted bind:selectedZoom bind:areaAndLayers />
 {#if hasStarted && areaAndLayers && selectedZoom}
   <Navbar on:onClickHome={onClickHome} />
   <GenerateMosaic

@@ -18,6 +18,7 @@
   } from "../helpers";
   import { HistoryItem, recentExports, ShortLink } from "../store";
   import { geocode } from "../api";
+  import RecentExports from "../components/RecentExports.svelte";
 
   const dispatch = createEventDispatcher<{ back: never }>();
 
@@ -61,7 +62,14 @@
       code: newHash,
       near: await geocode(getCentroid(layerConfig.bbox)),
     };
-    recentExports.update((existing) => [...existing, newItem]);
+    recentExports.update((existing) => {
+      // put the most recent one first. If we are reexporting,
+      // remove any existing entries with the same ID
+      const existingWithoutDuplicates = existing.filter(
+        (item) => item.code !== newHash
+      );
+      return [newItem, ...existingWithoutDuplicates];
+    });
   }
 
   onMount(async () => {
@@ -134,7 +142,7 @@
     });
   });
 
-  onDestroy(controller.abort);
+  onDestroy(() => controller.abort());
 
   const attributionRequired = layerConfig.layers.some(
     (l) => l.attribution?.required
@@ -180,6 +188,9 @@
     <Paper>
       <PaperTitle>Image Generated!</PaperTitle>
       <PaperContent>
+        <Button variant="outlined" on:click={() => dispatch("back")}>
+          Back
+        </Button>
         <Button variant="raised" href={final.blobUrl} download="map.png"
           >Download</Button
         >
@@ -192,6 +203,7 @@
         {/if}
       </PaperContent>
     </Paper>
+    <RecentExports />
   {:else}
     <Paper>
       <PaperTitle>Generating Image...</PaperTitle>

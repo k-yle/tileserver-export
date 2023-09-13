@@ -14,11 +14,11 @@
     ShortLink,
     recentExports,
   } from "../store/recentExports";
-  import { eliQueryPromise } from "../api";
+  import { allImageryPromise } from "../api";
   import type { ELI } from "../types";
 
   function onClickRepeat(item: HistoryItem) {
-    // FIXME: implement
+    window.location.hash = item.code;
   }
 
   function onClickDelete(item: HistoryItem) {
@@ -26,16 +26,6 @@
       existing.filter((x) => x.code !== item.code)
     );
   }
-
-  const allImageryPromise = eliQueryPromise.then((eliQuery) => {
-    const features = eliQuery?.raw.features || [];
-    // convert to object for faster lookups
-    return features.reduce<Record<string, ELI>>((ac, item) => {
-      // eslint-disable-next-line no-param-reassign
-      ac[item.properties.id] = item.properties;
-      return ac;
-    }, {});
-  });
 
   const getLayerNames = (allImagery: Record<string, ELI>, code: ShortLink) => {
     const [, , , , layerIds] = code.split("/");
@@ -53,7 +43,7 @@
 {:then allImagery}
   <Card variant="outlined" padded>
     <List twoLine nonInteractive>
-      {#each $recentExports as recentExport, index (recentExport.code)}
+      {#each $recentExports as recentExport, index (recentExport.code + index)}
         {#if index}
           <Separator />
         {/if}

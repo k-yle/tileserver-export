@@ -30,7 +30,7 @@
     "@smui/top-app-bar": "^6.0.0-beta.15",
     "leaflet": "^1.7.1",
     "leaflet-editable": "^1.2.0",
-    "svelte": "^3.0.0",
+    "svelte": "^3.49.0",
     "svelte-leafletjs": "^0.8.2",
     "svelte-material-ui": "^6.0.0-beta.15",
     "which-polygon": "^2.2.0"
